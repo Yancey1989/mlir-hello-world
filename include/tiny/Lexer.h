@@ -170,15 +170,19 @@ private:
     // String: "Hello World!"
     if (lastChar == '"') {
       std::string str;
+      // eat '"'
+      lastChar = Token(getNextChar());
       do {
         str += lastChar;
         lastChar = Token(getNextChar());
       } while (lastChar!= EOF && lastChar != '"');
-
-      if (lastChar == '"') {
-        str += lastChar;
+      if (lastChar == '"') 
         lastChar = Token(getNextChar());
-      }
+
+      //if (lastChar == '"') {
+      //  str += lastChar;
+      //  lastChar = Token(getNextChar());
+      //}
       strVal = str;
       return tok_str;
     }

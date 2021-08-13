@@ -14,7 +14,7 @@ def PrintOp : Tiny_Op<"print">  {
       nothing.
   }];
 
-  let arguments = (ins I32Tensor:$input);
+  let arguments = (ins AnyTypeOf<[I32Tensor, I32MemRef]>:$input);
 
   let assemblyFormat = "$input attr-dict `:` type($input)";
 

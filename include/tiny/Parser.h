@@ -107,19 +107,7 @@ private:
     lexer.consume(tok_str);
     return std::make_unique<LiteralExprAST>(std::move(loc), std::move(values), std::move(dims));
   }
-  /**
-  std::unique_ptr<ExprAST> parseStrExpr() {
-    auto loc = lexer.getLastLocation();
-    //auto strVal = lexer.getStr();
-    // string to literal expr
-    //auto values = str2IntLiteralExpr(loc, strVal);
 
-
-    auto result =
-        std::make_unique<StringExprAST>(std::move(loc), lexer.getStr());
-    lexer.consume(tok_str);
-    return std::move(result);
-  }**/
 
   /// Parse a literal array expression.
   /// tensorLiteral ::= [ literalList ] | number

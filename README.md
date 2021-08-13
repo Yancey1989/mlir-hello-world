@@ -3,10 +3,45 @@
 最近的一些工作会接触到 AI 编译器相关的技术，其中 MLIR 是 Google 在 2019 年的 GCP 上提出的一种新的 AI 编译基础设施,
 其目的是希望现有的编译优化技术（例如 XLA、TVM等）能够以 Dialect 的方式接入进来，从而使各家的编译优化技术能够一起发挥效用。
 
-和大部分程序语言的 101 一样，本文尝试实现一种新的语言 **Tiny**, 实现了打印 `Hello World!` 的功能。
+和大部分程序语言的 101 一样，本文尝试实现一种新的语言 **Tiny** 来打印字符串： `Hello World!` 。
 
-## PreRequirements
+## Prerequirements
 
+1. 编译 LLVM-MLIR 并安装
+
+  ``` text
+  cd mlir-hello-world/llvm-project
+  mkdir build
+
+  cmake -G Ninja ../llvm \
+    -DLLVM_ENABLE_PROJECTS=mlir \
+    -DLLVM_BUILD_EXAMPLES=OFF \
+    -DLLVM_TARGETS_TO_BUILD="X86" \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DLLVM_ENABLE_ASSERTIONS=ON \
+    -DLLVM_ENABLE_ZLIB=OFF \
+    -DLLVM_ENABLE_RTTI=ON \
+    -DCMAKE_INSTALL_PREFIX=$PWD/../install
+    
+  ninja install -j8
+  ```
+
+1. 设置环境变量
+
+  ``` text
+  cd mlir-hello-world
+  export PREFIX=$PWD/llvm-project/install
+  export BUILD_DIR=$PWD/llvm-project/build 
+  ```
+
+1. 编译 Tiny
+
+  ``` text
+  cd mlir-hello-world
+  mkdir build && cd build
+  cmake -G Ninja .. -DMLIR_DIR=$PREFIX/lib/cmake/mlir -DLLVM_EXTERNAL_LIT=$BUILD_DIR/bin/llvm-lit
+  cmake --build . --target tinyc
+  ```
 
 ## 语法解析：Tiny Language 到 Tiny AST
 

@@ -78,20 +78,18 @@ int dumpMLIRLLVM(tiny::ModuleAST& module) {
     // Inline all functions into main and then delete them.
     pm.addPass(mlir::createInlinerPass());
 
-    {
-        mlir::OpPassManager &optPM = pm.nest<mlir::FuncOp>();
+    mlir::OpPassManager &optPM = pm.nest<mlir::FuncOp>();
 
-        // Partially lower the tiny dialect with a few cleanups afterwards.
-        optPM.addPass(mlir::tiny::createLowerToAffinePass());
-        optPM.addPass(mlir::createCanonicalizerPass());
-        optPM.addPass(mlir::createCSEPass());
-    }
-
+    // Partially lower the tiny dialect with a few cleanups afterwards.
+    optPM.addPass(mlir::tiny::createLowerToAffinePass());
+    optPM.addPass(mlir::createCanonicalizerPass());
+    optPM.addPass(mlir::createCSEPass());
 
     // add LowerToLLVMPass
     //pm.addPass(mlir::tiny::createLowerToLLVMPass());
     if (mlir::failed(pm.run(*m)))
         return -1;
+    m->dump();   
     return 0;
 }
 

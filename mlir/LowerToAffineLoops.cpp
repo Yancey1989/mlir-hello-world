@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "tiny/TinyDialect.h"
 #include "tiny/TinyOps.h"
+#include "tiny/TinyDialect.h"
 #include "tiny/Passes.h"
 
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
@@ -45,54 +45,17 @@ static Value insertAllocAndDealloc(MemRefType type, Location loc,
   alloc->moveBefore(&parentBlock->front());
 
   // Make sure to deallocate this alloc at the end of the block. This is fine
-  // as tiny functions have no control flow.
+  // as toy functions have no control flow.
   auto dealloc = rewriter.create<memref::DeallocOp>(loc, alloc);
   dealloc->moveBefore(&parentBlock->back());
   return alloc;
 }
 
-/// This defines the function type used to process an iteration of a lowered
-/// loop. It takes as input an OpBuilder, an range of memRefOperands
-/// corresponding to the operands of the input operation, and the range of loop
-/// induction variables for the iteration. It returns a value to store at the
-/// current index of the iteration.
-using LoopIterationFn = function_ref<Value(
-    OpBuilder &builder, ValueRange memRefOperands, ValueRange loopIvs)>;
-
-static void lowerOpToLoops(Operation *op, ArrayRef<Value> operands,
-                           PatternRewriter &rewriter,
-                           LoopIterationFn processIteration) {
-  auto tensorType = (*op->result_type_begin()).cast<TensorType>();
-  auto loc = op->getLoc();
-
-  // Insert an allocation and deallocation for the result of this operation.
-  auto memRefType = convertTensorToMemRef(tensorType);
-  auto alloc = insertAllocAndDealloc(memRefType, loc, rewriter);
-
-  // Create a nest of affine loops, with one loop per dimension of the shape.
-  // The buildAffineLoopNest function takes a callback that is used to construct
-  // the body of the innermost loop given a builder, a location and a range of
-  // loop induction variables.
-  SmallVector<int64_t, 4> lowerBounds(tensorType.getRank(), /*Value=*/0);
-  SmallVector<int64_t, 4> steps(tensorType.getRank(), /*Value=*/1);
-  buildAffineLoopNest(
-      rewriter, loc, lowerBounds, tensorType.getShape(), steps,
-      [&](OpBuilder &nestedBuilder, Location loc, ValueRange ivs) {
-        // Call the processing function with the rewriter, the memref operands,
-        // and the loop induction variables. This function will return the value
-        // to store at the current index.
-        Value valueToStore = processIteration(nestedBuilder, operands, ivs);
-        nestedBuilder.create<AffineStoreOp>(loc, valueToStore, alloc, ivs);
-      });
-
-  // Replace this operation with the generated alloc.
-  rewriter.replaceOp(op, alloc);
-}
-
 namespace {
   
+
 //===----------------------------------------------------------------------===//
-// tinyToAffine RewritePatterns: Constant operations
+// ToyToAffine RewritePatterns: Constant operations
 //===----------------------------------------------------------------------===//
 
 struct ConstantOpLowering : public OpRewritePattern<tiny::ConstantOp> {
@@ -100,7 +63,7 @@ struct ConstantOpLowering : public OpRewritePattern<tiny::ConstantOp> {
 
   LogicalResult matchAndRewrite(tiny::ConstantOp op,
                                 PatternRewriter &rewriter) const final {
-    DenseIntElementsAttr constantValue = op.value();
+    DenseElementsAttr constantValue = op.value();
     Location loc = op.getLoc();
 
     // When lowering the constant operation, we allocate and assign the constant
@@ -158,7 +121,7 @@ struct ConstantOpLowering : public OpRewritePattern<tiny::ConstantOp> {
 };
 
 //===----------------------------------------------------------------------===//
-// tinyToAffine RewritePatterns: Return operations
+// ToyToAffine RewritePatterns: Return operations
 //===----------------------------------------------------------------------===//
 
 struct ReturnOpLowering : public OpRewritePattern<tiny::ReturnOp> {
@@ -171,25 +134,24 @@ struct ReturnOpLowering : public OpRewritePattern<tiny::ReturnOp> {
     if (op.hasOperand())
       return failure();
 
-    // We lower "tiny.return" directly to "std.return".
+    // We lower "toy.return" directly to "std.return".
     rewriter.replaceOpWithNewOp<ReturnOp>(op);
     return success();
   }
 };
 
-
 } // end anonymous namespace.
 
 //===----------------------------------------------------------------------===//
-// tinyToAffineLoweringPass
+// ToyToAffineLoweringPass
 //===----------------------------------------------------------------------===//
 
-/// This is a partial lowering to affine loops of the tiny operations that are
+/// This is a partial lowering to affine loops of the toy operations that are
 /// computationally intensive (like matmul for example...) while keeping the
-/// rest of the code in the tiny dialect.
+/// rest of the code in the Toy dialect.
 namespace {
-struct TinyToAffineLoweringPass
-    : public PassWrapper<TinyToAffineLoweringPass, FunctionPass> {
+struct ToyToAffineLoweringPass
+    : public PassWrapper<ToyToAffineLoweringPass, FunctionPass> {
   void getDependentDialects(DialectRegistry &registry) const override {
     registry.insert<AffineDialect, memref::MemRefDialect, StandardOpsDialect>();
   }
@@ -197,7 +159,7 @@ struct TinyToAffineLoweringPass
 };
 } // end anonymous namespace.
 
-void TinyToAffineLoweringPass::runOnFunction() {
+void ToyToAffineLoweringPass::runOnFunction() {
   auto function = getFunction();
 
   // We only lower the main function as we expect that all other functions have
@@ -224,14 +186,14 @@ void TinyToAffineLoweringPass::runOnFunction() {
   // We also define the Toy dialect as Illegal so that the conversion will fail
   // if any of these operations are *not* converted. Given that we actually want
   // a partial lowering, we explicitly mark the Toy operations that don't want
-  // to lower, `tiny.print`, as `legal`.
+  // to lower, `toy.print`, as `legal`.
   target.addIllegalDialect<tiny::TinyDialect>();
   target.addLegalOp<tiny::PrintOp>();
 
   // Now that the conversion target has been defined, we just need to provide
-  // the set of patterns that will lower the Tiny operations.
+  // the set of patterns that will lower the Toy operations.
   RewritePatternSet patterns(&getContext());
-  patterns.add< ConstantOpLowering, ReturnOpLowering >(&getContext());
+  patterns.add<ConstantOpLowering, ReturnOpLowering>(&getContext());
 
   // With the target and rewrite patterns defined, we can now attempt the
   // conversion. The conversion will signal failure if any of our `illegal`
@@ -242,7 +204,7 @@ void TinyToAffineLoweringPass::runOnFunction() {
 }
 
 /// Create a pass for lowering operations in the `Affine` and `Std` dialects,
-/// for a subset of the Tiny IR (e.g. matmul).
+/// for a subset of the Toy IR (e.g. matmul).
 std::unique_ptr<Pass> mlir::tiny::createLowerToAffinePass() {
-  return std::make_unique<TinyToAffineLoweringPass>();
+  return std::make_unique<ToyToAffineLoweringPass>();
 }
