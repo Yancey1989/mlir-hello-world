@@ -5,7 +5,8 @@
 
 和大部分程序语言的 101 一样，本文尝试实现一种新的语言 **Tiny**, 实现了打印 `Hello World!` 的功能。
 
-Tiny -> AST -> MLIR -> MLIR-LLVM  -> target code
+## PreRequirements
+
 
 ## 语法解析：Tiny Language 到 Tiny AST
 
@@ -33,13 +34,12 @@ $ tiny hello.tiny -emit ast
       Params: []
       Block {
         Print [ @hello.tiny:2:3
-          1.000000e+00 @hello.tiny:2:9
-        ]
-        Print [ @hello.tiny:3:3
-          "Hello World" @hello.tiny:3:9
+          Literal: <14>[ 72, 101, 108, 108, 111, 32, 87, 111, 114, 108, 100, 33, 92, 110] @hello.tiny:2:9
         ]
       } // Block
 ```
+
+因为目前 MLIR 还没有一条完备的通路可以支持 String 类型，所以在 AST 这里用 Int Tensor 来处理。
 
 ## 实现 Tiny Dialect: Tiny AST 到 Tiny IR
 
@@ -88,21 +88,14 @@ tiny.print %0 : tensor<6xi32>
 $./bin/tinyc hello.tiny -emit=mlir
 builtin.module  {
   builtin.func @main() {
-    %0 = tiny.constant dense<[34, 104, 101, 108, 111, 34]> : tensor<6xi32>
-    tiny.print %0 : tensor<6xi32>
+    %0 = tiny.constant dense<[72, 101, 108, 108, 111, 32, 87, 111, 114, 108, 100, 33, 92, 110]> : tensor<14xi32>
+    tiny.print %0 : tensor<14xi32>
     tiny.return
   }
 }
-```
 
-值得注意的是，IR 中将 string 字符串转换成了 INT，这是因为 MLIR 中暂时还没有一条完整的通路来支持 String 类型。
+```
 
 ## Lowering to LLVM IR
 
 
-
-TODO:
-
-- 如何理解 attribute、type、operations
-- OP 和 Operation
-- 如何定义 IR 才能保证能够正确 converter？
