@@ -5,11 +5,22 @@ set(LIBS
         ${conversion_libs}
         MLIRTiny
         MLIRAnalysis
-        MLIRIR
-        MLIRParser
-        MLIRSideEffectInterfaces
-        MLIRTransforms
+    MLIRCallInterfaces
+    MLIRCastInterfaces
+    MLIRExecutionEngine
+    MLIRIR
+    MLIRLLVMCommonConversion
+    MLIRLLVMIR
+    MLIRLLVMToLLVMIRTranslation
+    MLIRMemRef
+    MLIRParser
+    MLIRPass
+    MLIRSideEffectInterfaces
+    MLIRSupport
+    MLIRTargetLLVMIRExport
+    MLIRTransforms
 )
+
 add_llvm_executable(tinyc main.cpp ../parser/AST.cpp)
 
 llvm_update_compile_flags(tinyc)

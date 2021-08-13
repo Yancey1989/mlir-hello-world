@@ -179,10 +179,6 @@ private:
       if (lastChar == '"') 
         lastChar = Token(getNextChar());
 
-      //if (lastChar == '"') {
-      //  str += lastChar;
-      //  lastChar = Token(getNextChar());
-      //}
       strVal = str;
       return tok_str;
     }
