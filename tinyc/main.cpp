@@ -35,13 +35,14 @@ static cl::opt<std::string> inputFilename(cl::Positional,
                                           cl::desc("<input tiny file>"),
                                           cl::init("-"),
                                           cl::value_desc("filename"));
-enum Action { None, DumpAST, DumpMLIR, DumpMLIRLLVM, RunJIT};
+enum Action { None, DumpAST, DumpMLIR, DumpMLIRAffine, DumpMLIRLLVM, RunJIT};
 
 static cl::opt<enum Action>
     emitAction("emit", cl::desc("Select the kind of output desired"),
                cl::values(clEnumValN(DumpAST, "ast", "output the AST dump")),
                cl::values(clEnumValN(DumpMLIR, "mlir", "output the MLIR dump")),
                cl::values(clEnumValN(DumpMLIRLLVM, "mlir-llvm", "output the LLVM dump")),
+               cl::values(clEnumValN(DumpMLIRAffine, "mlir-affine", "output the affine pass dump")),
                cl::values(clEnumValN(RunJIT, "jit", "JIT the code and run it by invoke the main function")));
 
 
@@ -63,8 +64,10 @@ int loadMLIR(mlir::MLIRContext& context, mlir::OwningModuleRef& module) {
     // Apply any generic pass manager command line options and run the pipeline.
     applyPassManagerCLOptions(pm);
 
+    bool isLoweringMLIRAffine = emitAction >= Action::DumpMLIRAffine;
     bool isLoweringMLIRLLVM = emitAction >= Action::DumpMLIRLLVM;
-    if (isLoweringMLIRLLVM) {
+
+    if (isLoweringMLIRAffine) {
 
         // Inline all functions into main and then delete them.
         pm.addPass(mlir::createInlinerPass());
@@ -75,10 +78,13 @@ int loadMLIR(mlir::MLIRContext& context, mlir::OwningModuleRef& module) {
         optPM.addPass(mlir::tiny::createLowerToAffinePass());
         optPM.addPass(mlir::createCanonicalizerPass());
         optPM.addPass(mlir::createCSEPass());
+    }
 
-        // add LowerToLLVMPass
+    if (isLoweringMLIRLLVM) {
+         // add LowerToLLVMPass
         pm.addPass(mlir::tiny::createLowerToLLVMPass());
     }
+
 
     if (mlir::failed(pm.run(*module)))
         return -1;
@@ -146,23 +152,6 @@ int main(int argc, char** argv) {
     } else {
         module->dump();
         return 0;
-    }
-    return 0;
-
-    switch(emitAction) {
-    case Action::DumpAST:
-        tiny::dump(*moduleAST);
-        return 0;
-    case Action::DumpMLIR:
-        module->dump();
-        return 0;
-    case Action::DumpMLIRLLVM:
-        module->dump();
-        return 0;
-    case Action::RunJIT:
-        return runJIT(*module);
-    default:
-        llvm::errs() << "No action specified (parsing only?), use -emit=<action>\n";
     }
     return 0;
 }
