@@ -10,3 +10,4 @@ jobs:
           echo "Log level: $LEVEL"
           echo "Tags: $TAGS"
           echo "Environment: $ENVIRONMENT"
+          echo "event name: " ${{ github.event_name }}
