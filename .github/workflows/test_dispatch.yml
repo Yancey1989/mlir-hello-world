@@ -2,7 +2,7 @@ name: Test Workflow Dispatch
 
 on: 
   schedule:
-    - cron: '39 * * * *' # 1:00 am
+    - cron: '*/5 * * * *' # 1:00 am
   workflow_dispatch:
     inputs:
       logLevel:
