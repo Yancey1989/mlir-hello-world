@@ -2,7 +2,7 @@ name: Test Workflow Dispatch
 
 on: 
   schedule:
-    - cron: '56 * * * *' # 1:00 am
+    - cron: '39 * * * *' # 1:00 am
   workflow_dispatch:
     inputs:
       logLevel:
@@ -25,6 +25,7 @@ on:
 
 jobs:
   log-the-inputs:
+    if: github.event.ref == 'refs/heads/main' && github.event_name == 'schedule'
     runs-on: ubuntu-latest
     steps:
       - run: |
