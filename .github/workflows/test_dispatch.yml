@@ -34,4 +34,4 @@ jobs:
           LEVEL: ${{ inputs.logLevel }}
           TAGS: ${{ inputs.tags }}
           ENVIRONMENT: ${{ inputs.environment }}
-          EVENT_NAME: ${{github.event_name}}
+          EVENT_NAME: ${{ github.event_name }}
