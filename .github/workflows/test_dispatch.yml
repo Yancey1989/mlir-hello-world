@@ -1,6 +1,9 @@
 name: Test Workflow Dispatch
 
-on: workflow_dispatch
+on:
+  schedule:
+    - cron: '* * * * *' # 1:00 am
+  workflow_dispatch:
     
 jobs:
   log-the-inputs:
