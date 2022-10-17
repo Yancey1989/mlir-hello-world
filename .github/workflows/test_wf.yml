@@ -8,12 +8,8 @@ jobs:
   my-job:
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v2
+    - uses: technote-space/get-diff-action@v6
     - name: test-pr
       run: |
-        echo ${{ github.head_ref }}
-        echo ${{ github.ref_name }}
-        head_ref=$(git rev-parse "${{ github.head_ref }}")
-        branch_ref=$(git rev-parse ${{ github.ref_name }})
-        files=$(git diff --name-status $branch_ref $head_ref | awk '$1 != "D" {print $2}')
-        echo $files
-
+        echo ${{ env.GIT_DIFF }}
