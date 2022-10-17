@@ -39,3 +39,4 @@ jobs:
         TAGS: ${{ inputs.tags }}
         ENVIRONMENT: ${{ inputs.environment }}
         EVENT_NAME: ${{ github.event_name }}
+
