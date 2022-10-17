@@ -1,6 +1,8 @@
 name: Test Workflow Dispatch
 
 on: 
+  pull_request:
+    branches: [ main ]
   schedule:
     - cron: '*/5 * * * *' # 1:00 am
   workflow_dispatch:
@@ -27,6 +29,10 @@ jobs:
   log-the-inputs:
     runs-on: ubuntu-latest
     steps:
+    - name: test-pr
+      run: |
+	echo ${{ github.head_ref }}
+        echo ${{ github.ref_name }}
     - name: test
       if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
       run: |
@@ -39,3 +45,4 @@ jobs:
         TAGS: ${{ inputs.tags }}
         ENVIRONMENT: ${{ inputs.environment }}
         EVENT_NAME: ${{ github.event_name }}
+

@@ -32,3 +32,5 @@ add_subdirectory(include)
 add_subdirectory(mlir)
 add_subdirectory(parser)
 add_subdirectory(tinyc)
+test_new_line
+
