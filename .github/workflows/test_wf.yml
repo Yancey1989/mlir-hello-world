@@ -8,7 +8,17 @@ jobs:
   my-job:
     runs-on: ubuntu-latest
     steps:
-    - name: test-pr
+    - uses: actions/checkout@v2
+    - uses: technote-space/get-diff-action@v6
+      with:
+        PATTERNS: |
+          *
+          **/*
+          !*.md
+          !**/*.md
+    - name: only-markdown
+      if: env.GIT_DIFF || github.event_name != 'pull_request'
       run: |
-	      echo ${{ github.head_ref }}
-        echo ${{ github.ref_name }}
+        echo ${{ github.event_name }}
+        echo ${{ env.GIT_DIFF }}
+        echo ${{ env.MATCHED_FILES }}
