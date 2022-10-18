@@ -14,7 +14,7 @@ jobs:
         PATTERNS: |
           *
           **/*
-          !(*.md)
+          !*.md
           !(**/*.md)
     - name: only-markdown
       run: |
