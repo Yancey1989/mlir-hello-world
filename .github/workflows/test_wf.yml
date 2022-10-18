@@ -13,6 +13,7 @@ jobs:
       with:
         PATTERNS: |
           *.md
+          **/*.md
     - name: only-markdown
       run: |
         echo ${{ env.GIT_DIFF }}
