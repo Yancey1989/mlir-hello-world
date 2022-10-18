@@ -17,6 +17,7 @@ jobs:
           !*.md
           !**/*.md
     - name: only-markdown
+      if: env.GIT_DIFF && github.event_name == 'pull_request'
       run: |
         echo ${{ env.GIT_DIFF }}
         echo ${{ env.MATCHED_FILES }}
