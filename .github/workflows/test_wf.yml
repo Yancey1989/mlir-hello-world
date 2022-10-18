@@ -12,8 +12,8 @@ jobs:
     - uses: technote-space/get-diff-action@v6
       with:
         PATTERNS: |
-          ^(*.md)
-          ^(**/*.md)
+          !*.md
+          !**/*.md
     - name: only-markdown
       run: |
         echo ${{ env.GIT_DIFF }}
