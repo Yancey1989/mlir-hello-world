@@ -10,7 +10,10 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - uses: technote-space/get-diff-action@v6
+      with:
+        PATTERNS: |
+          *.md
     - name: only-markdown
       run: |
-        for file in ${{ env.GIT_DIFF }}; do
-          echo $file
+        echo ${{ env.GIT_DIFF }}
+        echo ${{ env.MATCHED_FILES }}
