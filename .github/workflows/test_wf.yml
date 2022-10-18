@@ -10,6 +10,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - uses: technote-space/get-diff-action@v6
-    - name: test-pr
+    - name: only-markdown
       run: |
-        echo ${{ env.GIT_DIFF }}
+        for file in ${{ env.GIT_DIFF }}; do
+          echo $file
