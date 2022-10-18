@@ -14,8 +14,8 @@ jobs:
         PATTERNS: |
           *
           **/*
-          !(*.md)
-          !(**/*.md)
+          !*.md
+          !**/*.md
     - name: only-markdown
       run: |
         echo ${{ env.GIT_DIFF }}
